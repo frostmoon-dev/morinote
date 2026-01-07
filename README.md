@@ -141,12 +141,12 @@ npm install
 
 **Running Locally**
 ```bash
-npm run dev
+npm run dev                
 ```
 
 **Building**
 ```bash
-npm run package
+npm run package            
 ```
 
 </td>
