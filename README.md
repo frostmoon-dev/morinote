@@ -24,72 +24,78 @@
 </h1>
 
 <table align="center">
-<tr><td>
+<tr>
+<td>
 
 ```
-╔══════════════════════════════════════╗
-║  > Distraction-Free Writing          ║
-║    Clean, white paper interface      ║
-║    for documenting your learnings    ║
-╚══════════════════════════════════════╝
+╔═══════════════════════════════════╗
+║  > Distraction-Free Writing       ║
+║    Clean, white paper interface   ║
+║    for documenting learnings      ║
+╚═══════════════════════════════════╝
 ```
 
-</td></tr>
-<tr><td>
+</td>
+<td>
 
 ```
-╔══════════════════════════════════════╗
-║  > Mori Girl Aesthetic               ║
-║    Earthy tones, soft typography     ║
-║    and natural textures              ║
-╚══════════════════════════════════════╝
+╔═══════════════════════════════════╗
+║  > Mori Girl Aesthetic            ║
+║    Earthy tones, soft typography  ║
+║    and natural textures           ║
+╚═══════════════════════════════════╝
 ```
 
-</td></tr>
-<tr><td>
+</td>
+</tr>
+<tr>
+<td>
 
 ```
-╔══════════════════════════════════════╗
-║  > Rich Text Editor                  ║
-║    Markdown support with hybrid      ║
-║    view that dims syntax             ║
-╚══════════════════════════════════════╝
+╔═══════════════════════════════════╗
+║  > Rich Text Editor               ║
+║    Markdown support with hybrid   ║
+║    view that dims syntax          ║
+╚═══════════════════════════════════╝
 ```
 
-</td></tr>
-<tr><td>
+</td>
+<td>
 
 ```
-╔══════════════════════════════════════╗
-║  > Data Safety                       ║
-║    Auto-saves to local storage       ║
-║    with JSON Import/Export           ║
-╚══════════════════════════════════════╝
+╔═══════════════════════════════════╗
+║  > Data Safety                    ║
+║    Auto-saves to local storage    ║
+║    with JSON Import/Export        ║
+╚═══════════════════════════════════╝
 ```
 
-</td></tr>
-<tr><td>
+</td>
+</tr>
+<tr>
+<td>
 
 ```
-╔══════════════════════════════════════╗
-║  > Proof of Learning                 ║
-║    Export notes to PDF or print      ║
-║    them as physical keepsakes        ║
-╚══════════════════════════════════════╝
+╔═══════════════════════════════════╗
+║  > Proof of Learning              ║
+║    Export notes to PDF or print   ║
+║    them as physical keepsakes     ║
+╚═══════════════════════════════════╝
 ```
 
-</td></tr>
-<tr><td>
+</td>
+<td>
 
 ```
-╔══════════════════════════════════════╗
-║  > Built for Devs                    ║
-║    Code highlighting, tags,          ║
-║    and keyboard navigation           ║
-╚══════════════════════════════════════╝
+╔═══════════════════════════════════╗
+║  > Built for Devs                 ║
+║    Code highlighting, tags,       ║
+║    and keyboard navigation        ║
+╚═══════════════════════════════════╝
 ```
 
-</td></tr>
+</td>
+</tr>
 </table>
 
 ---
@@ -115,38 +121,40 @@
 
 > **Prerequisites**
 > 
-> Node.js (v16 or higher)
-> npm (v7 or higher)
+> Node.js (v16+) and npm (v7+)
 
 </div>
 
-### Installation
+<table align="center">
+<tr>
+<td>
 
+**Installation**
 ```bash
-# Clone the repository
 git clone https://github.com/frostmoon-dev/morinote.git
 cd morinote
-
-# Install dependencies
 npm install
 ```
 
-### Running Locally
+</td>
+<td>
 
+**Running Locally**
 ```bash
-# Start the development server
 npm run dev
 ```
 
-### Building for Production
-
+**Building**
 ```bash
-# Create an executable installer
 npm run package
 ```
 
+</td>
+</tr>
+</table>
+
 <p align="center">
-  <i>The output will be in the <code>dist/</code> directory</i>
+  <i>Output will be in the <code>dist/</code> directory</i>
 </p>
 
 ---
@@ -157,8 +165,7 @@ npm run package
 
 <div align="center">
 
-> *Your notes are stored locally,*
-> *safe and sound on your machine.*
+> *Your notes are stored locally, safe and sound.*
 > 
 > **Auto-save** ─ Notes save automatically
 > **Backup** ─ Export JSON via Settings
@@ -172,9 +179,7 @@ npm run package
 </h1>
 
 <p align="center">
-  This project is licensed under the <b>MIT License</b>
-  <br/>
-  See the <a href="LICENSE">LICENSE</a> file for details
+  Licensed under <b>MIT</b> ─ See <a href="LICENSE">LICENSE</a>
 </p>
 
 ---
@@ -182,16 +187,16 @@ npm run package
 <div align="center">
 
 ```
-═══════════════════════════════════════
+════════════════════════════════════════
 ```
 
 <img src="https://readme-typing-svg.herokuapp.com?font=Satisfy&size=24&duration=3000&pause=1000&color=D4BBDD&center=true&vCenter=true&width=435&lines=Created+with+love+for+learning+%E2%99%A1" alt="Footer" />
 
 ```
-═══════════════════════════════════════
+════════════════════════════════════════
 ```
 
-<a href="https://github.com/frostmoon-dev" target="_blank">
+<a href="https://github.com/frostmoon-dev">
   <img src="https://img.shields.io/badge/Made_by-frostmoon-D4BBDD?style=for-the-badge&logoColor=white" alt="frostmoon"/>
 </a>
 
