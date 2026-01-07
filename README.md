@@ -1,6 +1,4 @@
 <div align="center">
-  <img src="https://imgur.com/dIDatBb.png" width="100"/>
-
   <h1>
     ⏾ 𝑴𝒐𝒓𝒊𝒏𝒐𝒕𝒆
   </h1>
@@ -16,9 +14,9 @@
 <pre>
 ╔════════════════════════════════════════════════════════════════════════════════════════╗
 ║                                                                                        ║
-║    Morinote is a personal learning documentation app tailored for developers,         ║
-║    designed with a calming "Mori Girl" aesthetic. It helps you track your             ║
-║    learning journey in a distraction-free, natural environment.                       ║
+║    Morinote is a personal learning documentation app tailored for developers,          ║
+║    designed with a calming "Mori Girl" aesthetic. It helps you track your              ║
+║    learning journey in a distraction-free, natural environment.                        ║
 ║                                                                                        ║
 ╚════════════════════════════════════════════════════════════════════════════════════════╝
 </pre>
@@ -131,7 +129,7 @@ npm run package
 ║                                                                                                ║
 ║    Your notes are stored locally on your machine, safe and sound.                              ║
 ║                                                                                                ║
-║    > Auto-save: Notes are saved automatically to your application's local storage             ║
+║    > Auto-save: Notes are saved automatically to your application's local storage              ║
 ║    > Backup: Go to Settings then Export Data to download a JSON backup                         ║
 ║                                                                                                ║
 ╚════════════════════════════════════════════════════════════════════════════════════════════════╝
