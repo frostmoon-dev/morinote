@@ -136,7 +136,7 @@ const Sidebar = ({ activeItem, onNavigate }) => {
         }
 
         .nav-item.active {
-          background-color: rgba(229, 152, 155, 0.15); /* Tinted accent bg */
+          background-color: rgba(56, 178, 172, 0.15); /* Tinted accent bg (Teal) */
           color: var(--color-accent);
           font-weight: 500;
         }

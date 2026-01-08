@@ -1,40 +1,39 @@
 :root {
   /* 
-    Mori Girl Theme Palette
-    Vibe: Natural, Earthy, Comfortable, Vintage, Soft.
-    Rule: Neutral background + Dark text + One accent.
+    Comfy & Calming Theme (Scientific/Sage)
+    Vibe: Serene, Focused, Growth-oriented.
+    Font: Quicksand (Rounded, Friendly, Readable)
   */
 
-  /* Base Colors - Warm Neutrals */
-  --color-bg-primary: #f9f7f2;
-  /* Linen/Off-white */
-  --color-bg-secondary: #eeeae4;
-  /* Slightly darker linen for cards/sidebars */
-  --color-bg-tertiary: #e6dfd6;
-  /* Borders/Inputs */
+  /* Base Colors - Calm Mint/Grey */
+  --color-bg-primary: #f4f7f6;
+  /* Very light mint/grey */
+  --color-bg-secondary: #ffffff;
+  /* Clean white for cards */
+  --color-bg-tertiary: #e3e8e5;
+  /* Soft borders */
 
-  /* Text Colors - Soft High Contrast */
-  --color-text-primary: #1a1a1a;
-  /* Darker than #2c2c2c */
-  --color-text-secondary: #4a4a4a;
-  /* Darker than #595959 */
-  --color-text-tertiary: #737373;
+  /* Text Colors - High Contrast but Soft */
+  --color-text-primary: #2d3748;
+  /* Slate gray, softer than black */
+  --color-text-secondary: #4a5568;
+  --color-text-tertiary: #718096;
 
-  /* Accent Color - Dusty Rose / Dried Flower */
-  /* Made slightly darker/richer for text contrast */
-  --color-accent: #d06d75;
-  --color-accent-hover: #b5838d;
+  /* Accent Color - Motivating Teal/Green */
+  --color-accent: #38b2ac;
+  /* Teal 500 - Balanced energy */
+  --color-accent-hover: #319795;
   --color-accent-text: #ffffff;
 
-  /* Status Colors - Muted/Pastel but clear */
-  --color-success: #8da399;
-  /* Sage Green */
-  --color-warning: #eec170;
-  /* Muted Mustard */
-  --color-error: #d66853;
-  /* Terra Cotta Red */
-  --color-info: #8d99ae;
-  /* Muted Blue/Gray */
+  /* Status Colors */
+  --color-success: #48bb78;
+  /* Green */
+  --color-warning: #ed8936;
+  /* Orange */
+  --color-error: #f56565;
+  /* Red */
+  --color-info: #4299e1;
+  /* Blue */
 
   /* Layout / Spacing */
   --spacing-xs: 4px;
@@ -42,43 +41,41 @@
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  /* Soft rounded corners */
-  --radius-lg: 20px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  /* More rounded for 'Comfy' feel */
 
   /* Typography */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Quicksand', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  /* Good for code snippets */
 
   /* Effects */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 6px 12px rgba(0, 0, 0, 0.06);
   --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-  --glass-bg: rgba(255, 255, 255, 0.65);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.18);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Dark Mode - Natural Night Vibe (Deep Forest/Night Sky) */
+/* Dark Mode - Deep Ocean/Focus */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg-primary: #1a1a1a;
-    --color-bg-secondary: #252525;
-    --color-bg-tertiary: #333333;
+    --color-bg-primary: #1a202c;
+    /* Slate 900 */
+    --color-bg-secondary: #2d3748;
+    /* Slate 800 */
+    --color-bg-tertiary: #4a5568;
 
-    --color-text-primary: #f0f0f0;
-    /* Brighter white */
-    --color-text-secondary: #b0b0b0;
-    /* Lighter grey */
-    --color-text-tertiary: #888888;
-    /* Significantly lighter for contrast */
+    --color-text-primary: #f7fafc;
+    --color-text-secondary: #cbd5e0;
+    --color-text-tertiary: #a0aec0;
 
-    --color-accent: #b5838d;
-    /* Slightly darker rose */
-    --color-accent-hover: #e5989b;
+    --color-accent: #81e6d9;
+    /* Teal 200 - Bright & Calming against dark */
+    --color-accent-hover: #4fd1c5;
 
-    --glass-bg: rgba(30, 30, 30, 0.65);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.05);
+    --glass-bg: rgba(26, 32, 44, 0.7);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
   }
 }

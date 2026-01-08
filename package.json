@@ -13,7 +13,8 @@
     "appId": "com.morinote.app",
     "productName": "Morinote",
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "public/yume.png"
     },
     "directories": {
       "output": "release"

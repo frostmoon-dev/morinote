@@ -3,10 +3,16 @@ const path = require('path');
 const isDev = !app.isPackaged;
 
 function createWindow() {
+    // Determine icon path based on environment
+    const iconPath = isDev
+        ? path.join(__dirname, 'public', 'yume.png')
+        : path.join(__dirname, 'dist', 'yume.png');
+
     // Create the browser window.
     const mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
+        icon: iconPath,
         webPreferences: {
             nodeIntegration: false, // Security: keep false
             contextIsolation: true, // Security: keep true

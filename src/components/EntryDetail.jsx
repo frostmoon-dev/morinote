@@ -140,22 +140,23 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
         }
 
         .markdown-body a {
-          color: #c95d66; /* Darker rose for links to pass accessible contrast */
+          color: var(--color-accent); 
           text-decoration: underline;
           text-underline-offset: 2px;
+          cursor: pointer;
         }
         
         .markdown-body a:hover {
-          color: #a8464e;
+          color: var(--color-accent-hover);
         }
         
         .markdown-body code {
-          background-color: #f5f5f5;
+          background-color: var(--color-bg-primary); /* Soft mint/grey */
           padding: 2px 6px;
           border-radius: 4px;
           font-family: var(--font-mono);
           font-size: 0.9em;
-          color: #d63384; /* Pinkish code color */
+          color: var(--color-accent); /* Use theme accent */
         }
 
         .markdown-body pre {

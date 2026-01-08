@@ -1,12 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, Tag, Trash2 } from 'lucide-react';
 
+const QUOTES = [
+  "Knowledge is power.",
+  "First, solve the problem. Then, write the code.",
+  "Simplicity is the soul of efficiency.",
+  "Make it work, make it right, make it fast.",
+  "Clean code always looks like it was written by someone who cares.",
+  "Experience is the name everyone gives to their mistakes.",
+  "Java is to JavaScript what car is to Carpet.",
+  "It’s not a bug; it’s an undocumented feature.",
+  "Code never lies, comments sometimes do.",
+];
+
 const EntryList = ({ entries, onSelectEntry, onDeleteEntry }) => {
+  const [quote, setQuote] = useState('');
+
+  useEffect(() => {
+    const randomQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    setQuote(randomQuote);
+  }, []);
+
   return (
     <div className="entry-list">
       <header className="list-header">
-        <h2>My Library</h2>
-        <span className="entry-count">{entries.length} notes</span>
+        <div className="header-content">
+          <h2>My Library</h2>
+          <span className="entry-count">{entries.length} notes</span>
+        </div>
+        <div className="quote-container">
+          <p>"{quote}"</p>
+        </div>
       </header>
 
       {entries.length === 0 ? (
@@ -62,12 +86,38 @@ const EntryList = ({ entries, onSelectEntry, onDeleteEntry }) => {
 
         .list-header {
           display: flex;
-          justify-content: space-between;
-          align-items: baseline;
+          flex-direction: column;
+          gap: var(--spacing-md);
           margin-bottom: var(--spacing-lg);
           border-bottom: 2px solid var(--color-bg-tertiary);
-          padding-bottom: var(--spacing-sm);
+          padding-bottom: var(--spacing-lg);
         }
+        
+        .header-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+        }
+
+        .quote-container {
+          background-color: var(--color-bg-secondary);
+          padding: var(--spacing-md) var(--spacing-lg);
+          border-radius: var(--radius-md);
+          border-left: 4px solid var(--color-accent);
+          display: flex;
+          align-items: center;
+          box-shadow: var(--shadow-sm);
+        }
+
+        .quote-container p {
+          font-style: italic;
+          color: var(--color-text-secondary);
+          margin: 0;
+          font-size: 0.95rem;
+          font-weight: 500;
+        }
+
+        /* Removed quote-icon style */
 
         .entry-count {
           font-size: 0.9rem;
