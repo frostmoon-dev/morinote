@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Tag, Trash2 } from 'lucide-react';
+import { Clock, Tag, Trash2, X, Filter } from 'lucide-react';
 
 const QUOTES = [
   "Knowledge is power.",
@@ -9,17 +9,28 @@ const QUOTES = [
   "Clean code always looks like it was written by someone who cares.",
   "Experience is the name everyone gives to their mistakes.",
   "Java is to JavaScript what car is to Carpet.",
-  "It’s not a bug; it’s an undocumented feature.",
+  "It's not a bug; it's an undocumented feature.",
   "Code never lies, comments sometimes do.",
 ];
 
-const EntryList = ({ entries, onSelectEntry, onDeleteEntry }) => {
+const EntryList = ({
+  entries,
+  onSelectEntry,
+  onDeleteEntry,
+  allTags = [],
+  selectedTag,
+  onTagSelect,
+  searchTerm,
+  onClearFilters
+}) => {
   const [quote, setQuote] = useState('');
 
   useEffect(() => {
     const randomQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
     setQuote(randomQuote);
   }, []);
+
+  const hasActiveFilters = searchTerm || selectedTag;
 
   return (
     <div className="entry-list">
@@ -33,9 +44,46 @@ const EntryList = ({ entries, onSelectEntry, onDeleteEntry }) => {
         </div>
       </header>
 
+      {/* Tag Filter Bar */}
+      {allTags.length > 0 && (
+        <div className="tag-filter-bar">
+          <div className="tag-filter-label">
+            <Filter size={14} />
+            <span>Filter by tag:</span>
+          </div>
+          <div className="tag-pills">
+            {allTags.map(tag => (
+              <button
+                key={tag}
+                className={`tag-pill ${selectedTag === tag ? 'active' : ''}`}
+                onClick={() => onTagSelect(tag)}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Active Filter Indicator */}
+      {hasActiveFilters && (
+        <div className="active-filters">
+          <span className="filter-label">Showing results for:</span>
+          {searchTerm && <span className="filter-badge">"{searchTerm}"</span>}
+          {selectedTag && <span className="filter-badge tag">#{selectedTag}</span>}
+          <button className="clear-filters" onClick={onClearFilters}>
+            <X size={14} /> Clear all
+          </button>
+        </div>
+      )}
+
       {entries.length === 0 ? (
         <div className="empty-state">
-          <p>No entries yet. Start learning!</p>
+          {hasActiveFilters ? (
+            <p>No notes match your filters. <button onClick={onClearFilters} className="link-btn">Clear filters</button></p>
+          ) : (
+            <p>No entries yet. Start learning!</p>
+          )}
         </div>
       ) : (
         <div className="grid">
@@ -59,12 +107,21 @@ const EntryList = ({ entries, onSelectEntry, onDeleteEntry }) => {
                     <Trash2 size={16} />
                   </button>
                 </div>
-                <p className="card-excerpt">{entry.excerpt}</p>
+                <p className="card-excerpt">{entry.excerpt || entry.content?.slice(0, 100) + '...'}</p>
 
                 <div className="card-footer">
                   <div className="meta-tags">
                     {entry.tags.map(tag => (
-                      <span key={tag} className="tag">#{tag}</span>
+                      <span
+                        key={tag}
+                        className={`tag ${selectedTag === tag ? 'highlighted' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onTagSelect && onTagSelect(tag);
+                        }}
+                      >
+                        #{tag}
+                      </span>
                     ))}
                   </div>
                   <span className="date">
@@ -117,7 +174,95 @@ const EntryList = ({ entries, onSelectEntry, onDeleteEntry }) => {
           font-weight: 500;
         }
 
-        /* Removed quote-icon style */
+        .tag-filter-bar {
+          display: flex;
+          align-items: center;
+          gap: var(--spacing-md);
+          margin-bottom: var(--spacing-md);
+          padding: var(--spacing-sm) 0;
+        }
+
+        .tag-filter-label {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          color: var(--color-text-tertiary);
+          font-size: 0.85rem;
+          white-space: nowrap;
+        }
+
+        .tag-pills {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+
+        .tag-pill {
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 0.8rem;
+          background: var(--color-bg-secondary);
+          color: var(--color-text-secondary);
+          border: 1px solid var(--color-bg-tertiary);
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .tag-pill:hover {
+          border-color: var(--color-accent);
+          color: var(--color-accent);
+        }
+
+        .tag-pill.active {
+          background: var(--color-accent);
+          color: white;
+          border-color: var(--color-accent);
+        }
+
+        .active-filters {
+          display: flex;
+          align-items: center;
+          gap: var(--spacing-sm);
+          padding: var(--spacing-sm) var(--spacing-md);
+          background: rgba(56, 178, 172, 0.1);
+          border-radius: var(--radius-sm);
+          margin-bottom: var(--spacing-md);
+        }
+
+        .filter-label {
+          color: var(--color-text-secondary);
+          font-size: 0.85rem;
+        }
+
+        .filter-badge {
+          background: var(--color-bg-secondary);
+          padding: 2px 10px;
+          border-radius: 12px;
+          font-size: 0.85rem;
+          color: var(--color-text-primary);
+        }
+
+        .filter-badge.tag {
+          background: var(--color-accent);
+          color: white;
+        }
+
+        .clear-filters {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          margin-left: auto;
+          padding: 4px 10px;
+          border-radius: var(--radius-sm);
+          font-size: 0.8rem;
+          color: var(--color-text-secondary);
+          transition: all 0.2s;
+        }
+
+        .clear-filters:hover {
+          background: var(--color-bg-tertiary);
+          color: var(--color-text-primary);
+        }
 
         .entry-count {
           font-size: 0.9rem;
@@ -131,9 +276,6 @@ const EntryList = ({ entries, onSelectEntry, onDeleteEntry }) => {
         }
 
         .entry-card {
-          /* FIX: Use theme status color to ensuring text is visible in dark mode.
-             Or use a specific variable that flips correctly.
-             Using var(--color-bg-secondary) ensures it's dark in dark mode, light in light mode. */
           background-color: var(--color-bg-secondary);
           border-radius: var(--radius-md);
           padding: var(--spacing-lg);
@@ -160,7 +302,7 @@ const EntryList = ({ entries, onSelectEntry, onDeleteEntry }) => {
 
         .card-title {
           font-size: 1.1rem;
-          color: var(--color-text-primary); /* Now visible because bg is appropriate */
+          color: var(--color-text-primary);
           flex: 1;
         }
 
@@ -208,6 +350,19 @@ const EntryList = ({ entries, onSelectEntry, onDeleteEntry }) => {
         .tag {
           color: var(--color-accent);
           font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .tag:hover {
+          opacity: 0.7;
+        }
+
+        .tag.highlighted {
+          background: var(--color-accent);
+          color: white;
+          padding: 1px 6px;
+          border-radius: 8px;
         }
 
         .date {
@@ -222,6 +377,15 @@ const EntryList = ({ entries, onSelectEntry, onDeleteEntry }) => {
           padding: 4rem 0;
           color: var(--color-text-tertiary);
           font-style: italic;
+        }
+
+        .link-btn {
+          color: var(--color-accent);
+          text-decoration: underline;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-style: normal;
         }
       `}</style>
     </div>

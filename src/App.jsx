@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import EntryList from './components/EntryList';
 import EntryForm from './components/EntryForm';
@@ -8,6 +8,11 @@ import Settings from './components/Settings';
 function App() {
   const [view, setView] = useState('library'); // 'library', 'add', 'settings', 'detail', 'edit'
   const [selectedEntry, setSelectedEntry] = useState(null);
+
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTag, setSelectedTag] = useState(null);
+  const searchInputRef = useRef(null);
 
   // Initialize from LocalStorage or use default
   const [entries, setEntries] = useState(() => {
@@ -32,6 +37,51 @@ function App() {
     localStorage.setItem('morinote_entries', JSON.stringify(entries));
   }, [entries]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+N: New note
+      if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        setView('add');
+      }
+      // Escape: Go back
+      if (e.key === 'Escape') {
+        if (view === 'detail') setView('library');
+        else if (view === 'add' || view === 'edit') {
+          // Only go back if not in editor textarea
+          if (document.activeElement?.tagName !== 'TEXTAREA') {
+            setView(view === 'edit' ? 'detail' : 'library');
+          }
+        }
+      }
+      // /: Focus search (when not in input)
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        setView('library');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [view]);
+
+  // Filter entries based on search and tag
+  const filteredEntries = entries.filter(entry => {
+    const matchesSearch = !searchTerm ||
+      entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesTag = !selectedTag || entry.tags.includes(selectedTag);
+
+    return matchesSearch && matchesTag;
+  });
+
+  // Get all unique tags
+  const allTags = [...new Set(entries.flatMap(e => e.tags))];
+
   const handleSaveEntry = (entryToSave) => {
     if (entryToSave.id) {
       // Update existing
@@ -55,10 +105,6 @@ function App() {
   };
 
   const handleImportData = (importedEntries) => {
-    // Merge strategy: Add new ones, or replace? 
-    // Simple strategy: Combine arrays, remove duplicates by ID? 
-    // Given the ID generation is Date.now(), collisions are rare unless re-importing same file.
-    // Let's just append new ones that don't share an ID.
     const existingIds = new Set(entries.map(e => e.id));
     const uniqueNew = importedEntries.filter(e => !existingIds.has(e.id));
 
@@ -73,14 +119,35 @@ function App() {
   };
 
   const handleEditEntry = (entry) => {
-    setSelectedEntry(entry); // Ensure it's selected
+    setSelectedEntry(entry);
     setView('edit');
+  };
+
+  const handleTagSelect = (tag) => {
+    setSelectedTag(selectedTag === tag ? null : tag);
+    setView('library');
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedTag(null);
   };
 
   const renderContent = () => {
     switch (view) {
       case 'library':
-        return <EntryList entries={entries} onSelectEntry={handleViewEntry} onDeleteEntry={handleDeleteEntry} />;
+        return (
+          <EntryList
+            entries={filteredEntries}
+            onSelectEntry={handleViewEntry}
+            onDeleteEntry={handleDeleteEntry}
+            allTags={allTags}
+            selectedTag={selectedTag}
+            onTagSelect={handleTagSelect}
+            searchTerm={searchTerm}
+            onClearFilters={clearFilters}
+          />
+        );
       case 'detail':
         return <EntryDetail entry={selectedEntry} onBack={() => setView('library')} onEdit={handleEditEntry} />;
       case 'add':
@@ -90,13 +157,19 @@ function App() {
       case 'settings':
         return <Settings entries={entries} onImport={handleImportData} />;
       default:
-        return <EntryList entries={entries} onSelectEntry={handleViewEntry} onDeleteEntry={handleDeleteEntry} />;
+        return <EntryList entries={filteredEntries} onSelectEntry={handleViewEntry} onDeleteEntry={handleDeleteEntry} />;
     }
   };
 
   return (
     <div className="layout">
-      <Sidebar activeItem={view} onNavigate={setView} />
+      <Sidebar
+        activeItem={view}
+        onNavigate={setView}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchInputRef={searchInputRef}
+      />
       <main className="main-content">
         {renderContent()}
       </main>
