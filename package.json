@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "electron": "electron .",
-    "package": "electron-builder -w"
+    "package": "electron-builder -w",
+    "package:mac": "electron-builder -m",
+    "package:linux": "electron-builder -l",
+    "package:all": "electron-builder -wml",
+    "publish-app": "npm install && npm run build && npm run package"
   },
   "build": {
     "appId": "com.morinote.app",
@@ -15,6 +19,14 @@
     "win": {
       "target": "nsis",
       "icon": "public/yume.png"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "public/yume.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Utility"
     },
     "directories": {
       "output": "release"
@@ -25,12 +37,18 @@
       "preload.js",
       "package.json",
       "node_modules/**/*"
-    ]
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "YOUR_GITHUB_USERNAME",
+      "repo": "morinote"
+    }
   },
   "author": "User",
   "license": "MIT",
   "dependencies": {
     "easymde": "^2.20.0",
+    "electron-updater": "^6.3.0",
     "lowdb": "^7.0.0",
     "lucide-react": "^0.300.0",
     "react": "^18.2.0",
