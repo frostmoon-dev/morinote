@@ -4,6 +4,7 @@ import EntryList from './components/EntryList';
 import EntryForm from './components/EntryForm';
 import EntryDetail from './components/EntryDetail';
 import Settings from './components/Settings';
+import ConfirmDialog from './components/ConfirmDialog';
 
 function App() {
   const [view, setView] = useState('library'); // 'library', 'add', 'settings', 'detail', 'edit'
@@ -13,6 +14,13 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState(null);
   const searchInputRef = useRef(null);
+
+  // Delete confirmation dialog state
+  const [deleteDialog, setDeleteDialog] = useState({
+    isOpen: false,
+    entryId: null,
+    entryTitle: ''
+  });
 
   // Initialize from LocalStorage or use default
   const [entries, setEntries] = useState(() => {
@@ -96,12 +104,25 @@ function App() {
   };
 
   const handleDeleteEntry = (id) => {
-    if (confirm('Are you sure you want to delete this entry?')) {
-      setEntries(entries.filter(e => e.id !== id));
-      if (selectedEntry && selectedEntry.id === id) {
-        setView('library');
-      }
+    const entry = entries.find(e => e.id === id);
+    setDeleteDialog({
+      isOpen: true,
+      entryId: id,
+      entryTitle: entry?.title || 'this entry'
+    });
+  };
+
+  const confirmDelete = () => {
+    const id = deleteDialog.entryId;
+    setEntries(entries.filter(e => e.id !== id));
+    if (selectedEntry && selectedEntry.id === id) {
+      setView('library');
     }
+    setDeleteDialog({ isOpen: false, entryId: null, entryTitle: '' });
+  };
+
+  const cancelDelete = () => {
+    setDeleteDialog({ isOpen: false, entryId: null, entryTitle: '' });
   };
 
   const handleImportData = (importedEntries) => {
@@ -140,6 +161,7 @@ function App() {
           <EntryList
             entries={filteredEntries}
             onSelectEntry={handleViewEntry}
+            onEditEntry={handleEditEntry}
             onDeleteEntry={handleDeleteEntry}
             allTags={allTags}
             selectedTag={selectedTag}
@@ -173,6 +195,17 @@ function App() {
       <main className="main-content">
         {renderContent()}
       </main>
+
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        title="Delete Note"
+        message={`Are you sure you want to delete "${deleteDialog.entryTitle}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        variant="danger"
+      />
 
       <style>{`
         .layout {
