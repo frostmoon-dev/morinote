@@ -61,6 +61,16 @@ const EntryList = ({
     navigator.clipboard.writeText(entry.content || '');
   };
 
+  // Utility to strip markdown for preview
+  const stripMarkdown = (text) => {
+    if (!text) return '';
+    return text
+      .replace(/[#*`_~>[\]]/g, '') // Remove simple markdown chars
+      .replace(/\(https?:\/\/[^\s)]+\)/g, '') // Remove links
+      .replace(/\n/g, ' ') // Replace newlines with spaces
+      .trim();
+  };
+
   return (
     <div className="entry-list">
       <header className="list-header">
@@ -137,7 +147,7 @@ const EntryList = ({
                     <Trash2 size={16} />
                   </button>
                 </div>
-                <p className="card-excerpt">{entry.excerpt || entry.content?.slice(0, 100) + '...'}</p>
+                <p className="card-excerpt">{entry.excerpt || stripMarkdown(entry.content)?.slice(0, 100) + '...'}</p>
 
                 <div className="card-footer">
                   <div className="meta-tags">

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { ArrowLeft, Printer, Calendar, Edit2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
@@ -8,6 +8,46 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
   const handlePrint = () => {
     window.print(); // Simple PDF export via browser/electron print dialog
   };
+
+  // Custom image component that handles local: references
+  const ImageRenderer = useCallback(({ src, alt }) => {
+    let imageSrc = src;
+
+    // Handle local: references - extract imageId and get from localStorage
+    if (src && src.startsWith('local:')) {
+      const imageId = src.replace('local:', '');
+      const storedImage = localStorage.getItem(imageId);
+      if (storedImage) {
+        imageSrc = storedImage;
+      } else {
+        // Image not found, show placeholder
+        return (
+          <div style={{
+            padding: '20px',
+            background: '#f5f5f5',
+            border: '1px dashed #ccc',
+            borderRadius: '8px',
+            textAlign: 'center',
+            color: '#888'
+          }}>
+            📷 Image not found: {alt || imageId}
+          </div>
+        );
+      }
+    }
+
+    return (
+      <img
+        src={imageSrc}
+        alt={alt || 'Image'}
+        style={{
+          maxWidth: '100%',
+          borderRadius: '8px',
+          margin: '1em 0'
+        }}
+      />
+    );
+  }, []);
 
   return (
     <article className="entry-detail">
@@ -41,7 +81,13 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
         </div>
 
         <div className="markdown-body">
-          <ReactMarkdown>{entry.content}</ReactMarkdown>
+          <ReactMarkdown
+            components={{
+              img: ImageRenderer
+            }}
+          >
+            {entry.content}
+          </ReactMarkdown>
         </div>
       </div>
 
@@ -137,6 +183,17 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
 
         .markdown-body p {
           margin-bottom: 1em;
+        }
+
+        .markdown-body ul,
+        .markdown-body ol {
+          padding-left: 2em;
+          margin-bottom: 1em;
+        }
+
+        .markdown-body li {
+          margin-bottom: 0.5em;
+          padding-left: 0.5em;
         }
 
         .markdown-body a {
