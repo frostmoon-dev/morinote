@@ -30,7 +30,7 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
       id: initialData?.id, // Preserve ID if editing
       title,
       content,
-      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+      tags: tags.split(/[,\s]+/).map(t => t.trim()).filter(Boolean),
       createdAt: initialData?.createdAt || new Date().toISOString()
     });
   };
@@ -67,7 +67,7 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
         <input
           id="tags"
           type="text"
-          placeholder="react, hooks, javascript"
+          placeholder="react hooks javascript (separate with spaces or commas)"
           value={tags}
           onChange={(e) => setTags(e.target.value)}
         />
