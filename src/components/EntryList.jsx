@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Tag, Trash2, X, Filter } from 'lucide-react';
+import ContextMenu from './ContextMenu';
 
 const QUOTES = [
   "Knowledge is power.",
@@ -16,6 +17,7 @@ const QUOTES = [
 const EntryList = ({
   entries,
   onSelectEntry,
+  onEditEntry,
   onDeleteEntry,
   allTags = [],
   selectedTag,
@@ -24,6 +26,11 @@ const EntryList = ({
   onClearFilters
 }) => {
   const [quote, setQuote] = useState('');
+  const [contextMenu, setContextMenu] = useState({
+    isOpen: false,
+    position: { x: 0, y: 0 },
+    entry: null
+  });
 
   useEffect(() => {
     const randomQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
@@ -31,6 +38,28 @@ const EntryList = ({
   }, []);
 
   const hasActiveFilters = searchTerm || selectedTag;
+
+  const handleContextMenu = (e, entry) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      isOpen: true,
+      position: { x: e.clientX, y: e.clientY },
+      entry
+    });
+  };
+
+  const closeContextMenu = () => {
+    setContextMenu({ isOpen: false, position: { x: 0, y: 0 }, entry: null });
+  };
+
+  const handleCopyTitle = (entry) => {
+    navigator.clipboard.writeText(entry.title);
+  };
+
+  const handleCopyContent = (entry) => {
+    navigator.clipboard.writeText(entry.content || '');
+  };
 
   return (
     <div className="entry-list">
@@ -92,6 +121,7 @@ const EntryList = ({
               key={entry.id}
               className="entry-card"
               onClick={() => onSelectEntry(entry)}
+              onContextMenu={(e) => handleContextMenu(e, entry)}
             >
               <div className="card-content">
                 <div className="card-top">
@@ -134,6 +164,18 @@ const EntryList = ({
           ))}
         </div>
       )}
+
+      <ContextMenu
+        isOpen={contextMenu.isOpen}
+        position={contextMenu.position}
+        entry={contextMenu.entry}
+        onClose={closeContextMenu}
+        onView={onSelectEntry}
+        onEdit={onEditEntry}
+        onDelete={(entry) => onDeleteEntry(entry.id)}
+        onCopyTitle={handleCopyTitle}
+        onCopyContent={handleCopyContent}
+      />
 
       <style>{`
         .entry-list {
