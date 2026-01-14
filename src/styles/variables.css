@@ -1,72 +1,67 @@
 :root {
   /*
-    ADHD-Friendly Calming Theme
-    Vibe: Peaceful, Focused, Supportive
-    Font: Quicksand (Rounded, Friendly, Readable)
-
-    Color Psychology for ADHD:
-    - Soft blues: Promotes calm and focus
-    - Sage greens: Reduces anxiety, natural feeling
-    - Lavender: Calming, reduces stress
-    - Low saturation: Prevents overstimulation
-    - High contrast text: Improves readability
+    Sweet Nostalgia Theme - Light Mode
+    Vibe: Warm, Cozy, Elegant
+    Palette: Berry Brown, Rosewood Red, Almond Cream, Sweet Beige
   */
 
-  /* Base Colors - Soft Lavender-Sage Blend */
-  --color-bg-primary: #f5f7fa;
-  /* Very soft blue-grey, easy on eyes */
+  /* Base Colors - Light Warm Palette */
+  --color-bg-primary: #f5f3ed;
+  /* Warm off-white background */
   --color-bg-secondary: #ffffff;
-  /* Pure white for cards - high contrast */
-  --color-bg-tertiary: #e8ecf1;
-  /* Soft blue-grey borders */
-  --color-bg-hover: #f0f4f8;
-  /* Subtle hover state */
+  /* Pure white for cards */
+  --color-bg-tertiary: #e6e0d4;
+  /* Warm beige borders */
+  --color-bg-hover: #f0ece4;
+  /* Soft hover state */
 
-  /* Text Colors - High Contrast but Gentle */
-  --color-text-primary: #2d3748;
-  /* Slate gray, excellent readability */
-  --color-text-secondary: #4a5568;
-  /* Medium emphasis */
-  --color-text-tertiary: #718096;
-  /* Low emphasis */
-  --color-text-muted: #a0aec0;
-  /* Very subtle */
+  /* Sidebar Colors - Light for day mode */
+  --color-sidebar-bg: #faf9f6;
+  /* Light cream sidebar */
+  --color-sidebar-text: #66281f;
+  /* Berry Brown text */
+  --color-sidebar-text-secondary: #994d47;
+  /* Rosewood text */
 
-  /* Accent Colors - Calming Palette */
-  --color-accent: #6cb4c2;
-  /* Soft teal-blue - calming yet energizing */
-  --color-accent-hover: #5a9fac;
-  /* Deeper on hover */
-  --color-accent-light: #d4ebf0;
-  /* Very light teal for backgrounds */
+  /* Text Colors - Dark on light background */
+  --color-text-primary: #66281f;
+  /* Berry Brown */
+  --color-text-secondary: #7a3d38;
+  /* Lighter rosewood */
+  --color-text-tertiary: #9d8361;
+  /* Almond Cream */
+  --color-text-muted: #bfb9a3;
+  /* Subtle */
+
+  /* Accent Colors - Rosewood Palette */
+  --color-accent: #994d47;
+  /* Rosewood Red */
+  --color-accent-hover: #7a3d38;
+  /* Darker on hover */
+  --color-accent-light: #f5e6e4;
+  /* Very light rose */
   --color-accent-text: #ffffff;
 
-  /* Secondary Accent - Sage Green for variety */
-  --color-accent-secondary: #86b49d;
-  /* Soft sage green */
-  --color-accent-secondary-hover: #72a088;
-  --color-accent-secondary-light: #e3f0e8;
+  /* Secondary Accent - Almond */
+  --color-accent-secondary: #9d8361;
+  --color-accent-secondary-hover: #8a7254;
+  --color-accent-secondary-light: #f2ebe0;
 
-  /* Calming Purple Accent - for focus areas */
-  --color-focus: #a78bcd;
-  /* Soft lavender */
-  --color-focus-light: #ebe4f2;
+  /* Focus */
+  --color-focus: #66281f;
+  --color-focus-light: #f5e6e4;
 
-  /* Status Colors - Softened for ADHD friendliness */
-  --color-success: #6bb97d;
-  /* Soft green - not too bright */
-  --color-success-light: #e6f7ea;
-  --color-warning: #e6a04c;
-  /* Muted orange - less alarming */
-  --color-warning-light: #fef4e8;
-  --color-error: #e57373;
-  /* Softer red - still noticeable */
-  --color-error-light: #fee;
-  --color-info: #64b5f6;
-  /* Gentle blue */
-  --color-info-light: #e3f2fd;
+  /* Status Colors */
+  --color-success: #6b8e4e;
+  --color-success-light: #e8f0e3;
+  --color-warning: #c4923a;
+  --color-warning-light: #fef6e8;
+  --color-error: #994d47;
+  --color-error-light: #f5e6e4;
+  --color-info: #9d8361;
+  --color-info-light: #f2ebe0;
 
-  /* Layout / Spacing - Generous for reduced clutter */
+  /* Layout / Spacing */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
@@ -76,9 +71,8 @@
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
-  /* Rounded corners feel friendlier */
 
-  /* Typography - Clear hierarchy */
+  /* Typography */
   --font-sans: 'Quicksand', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Consolas', monospace;
   --font-size-sm: 0.875rem;
@@ -89,75 +83,81 @@
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
 
-  /* Effects - Subtle and calming */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --shadow-glass: 0 8px 32px 0 rgba(108, 180, 194, 0.08);
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-border: 1px solid rgba(108, 180, 194, 0.15);
+  /* Effects */
+  --shadow-sm: 0 2px 4px rgba(102, 40, 31, 0.06);
+  --shadow-md: 0 4px 12px rgba(102, 40, 31, 0.10);
+  --shadow-lg: 0 8px 24px rgba(102, 40, 31, 0.14);
+  --shadow-glass: 0 8px 32px 0 rgba(153, 77, 71, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-border: 1px solid rgba(153, 77, 71, 0.15);
 
-  /* Transitions - Smooth but not distracting */
+  /* Transitions */
   --transition-fast: 150ms ease;
   --transition-base: 200ms ease;
   --transition-slow: 300ms ease;
 }
 
-/* Dark Mode - Calming Night Sky */
+/* Dark Mode - Maroon Theme */
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Dark backgrounds - Soft navy instead of harsh black */
-    --color-bg-primary: #1e2636;
-    /* Soft navy-grey */
-    --color-bg-secondary: #2a3447;
-    /* Slightly lighter cards */
-    --color-bg-tertiary: #3d4a5f;
-    /* Borders and dividers */
-    --color-bg-hover: #344052;
-    /* Hover states */
+    /* Dark maroon backgrounds */
+    --color-bg-primary: #5c1a1a;
+    /* Deep maroon */
+    --color-bg-secondary: #3d1212;
+    /* Darker cards */
+    --color-bg-tertiary: #7a2d2d;
+    /* Lighter maroon borders */
+    --color-bg-hover: #6d2323;
 
-    /* Text - High contrast but not blinding white */
-    --color-text-primary: #e8eef5;
-    /* Soft white */
-    --color-text-secondary: #c5d1de;
+    /* Sidebar - Maroon for dark mode */
+    --color-sidebar-bg: #4a1515;
+    /* Dark maroon sidebar */
+    --color-sidebar-text: #f5e6e4;
+    /* Light cream text */
+    --color-sidebar-text-secondary: #e6ccc8;
+    /* Slightly darker cream */
+
+    /* Text - Light for dark backgrounds */
+    --color-text-primary: #f5f0e8;
+    /* Warm white */
+    --color-text-secondary: #e6ddd3;
     /* Medium emphasis */
-    --color-text-tertiary: #9daab8;
+    --color-text-tertiary: #bfb9a3;
     /* Low emphasis */
-    --color-text-muted: #6b7889;
+    --color-text-muted: #9d8361;
     /* Very subtle */
 
-    /* Accent colors - Brighter for contrast, still calming */
-    --color-accent: #7dd3e0;
-    /* Bright soft teal */
-    --color-accent-hover: #91dde8;
-    --color-accent-light: #2d4d54;
-    /* Dark teal for backgrounds */
+    /* Accent colors - Brighter for contrast */
+    --color-accent: #d49690;
+    /* Lighter Rosewood */
+    --color-accent-hover: #e0aba6;
+    --color-accent-light: #5c2a2a;
+    /* Dark rose background */
+    --color-accent-text: #1a0808;
 
-    --color-accent-secondary: #9fcdaa;
-    /* Soft mint green */
-    --color-accent-secondary-hover: #b3d8ba;
-    --color-accent-secondary-light: #2d4438;
+    --color-accent-secondary: #c4a87d;
+    --color-accent-secondary-hover: #d4bc96;
+    --color-accent-secondary-light: #3d2a2a;
 
-    --color-focus: #b8a4d6;
-    /* Soft lavender - stands out against dark */
-    --color-focus-light: #3d3650;
+    --color-focus: #d49690;
+    --color-focus-light: #5c2a2a;
 
     /* Status colors for dark mode */
-    --color-success: #7ec98f;
-    --color-success-light: #2d4434;
-    --color-warning: #f0b86e;
-    --color-warning-light: #4a3d2a;
-    --color-error: #f38989;
-    --color-error-light: #4a2e2e;
-    --color-info: #7dc5f7;
-    --color-info-light: #2d3f4f;
+    --color-success: #a3b881;
+    --color-success-light: #2d3020;
+    --color-warning: #e4b86e;
+    --color-warning-light: #4a3520;
+    --color-error: #d49690;
+    --color-error-light: #5c2a2a;
+    --color-info: #c4a87d;
+    --color-info-light: #3d2a2a;
 
     /* Effects for dark mode */
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
     --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-    --glass-bg: rgba(42, 52, 71, 0.85);
-    --glass-border: 1px solid rgba(125, 211, 224, 0.15);
+    --glass-bg: rgba(60, 18, 18, 0.95);
+    --glass-border: 1px solid rgba(212, 150, 144, 0.2);
   }
 }

@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Menu } from 'lucide-react';
+import Toast from './components/Toast';
 import Sidebar from './components/Sidebar';
 import EntryList from './components/EntryList';
 import EntryForm from './components/EntryForm';
@@ -9,6 +11,11 @@ import ConfirmDialog from './components/ConfirmDialog';
 function App() {
   const [view, setView] = useState('library'); // 'library', 'add', 'settings', 'detail', 'edit'
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isFormDirty, setIsFormDirty] = useState(false);
+
+  // Toast state
+  const [toast, setToast] = useState({ isVisible: false, message: '', type: 'success' });
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,6 +27,13 @@ function App() {
     isOpen: false,
     entryId: null,
     entryTitle: ''
+  });
+
+  // Discard changes confirmation dialog
+  const [discardDialog, setDiscardDialog] = useState({
+    isOpen: false,
+    targetView: null, // where the user wanted to go
+    resetSelected: false
   });
 
   // Initialize from LocalStorage or use default
@@ -51,6 +65,7 @@ function App() {
       // Ctrl+N: New note
       if (e.ctrlKey && e.key === 'n') {
         e.preventDefault();
+        setSelectedEntry(null);
         setView('add');
       }
       // Escape: Go back
@@ -82,7 +97,7 @@ function App() {
       entry.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesTag = !selectedTag || entry.tags.includes(selectedTag);
+    const matchesTag = !selectedTag || entry.tags.some(t => t.toLowerCase() === selectedTag.toLowerCase());
 
     return matchesSearch && matchesTag;
   });
@@ -101,6 +116,15 @@ function App() {
       setEntries([{ ...entryToSave, id: Date.now() }, ...entries]);
       setView('library');
     }
+
+    // Show success toast
+    setToast({
+      isVisible: true,
+      message: 'Note saved successfully!',
+      type: 'success'
+    });
+
+    setIsFormDirty(false);
   };
 
   const handleDeleteEntry = (id) => {
@@ -119,6 +143,7 @@ function App() {
       setView('library');
     }
     setDeleteDialog({ isOpen: false, entryId: null, entryTitle: '' });
+    setToast({ isVisible: true, message: 'Note deleted.', type: 'info' });
   };
 
   const cancelDelete = () => {
@@ -130,7 +155,7 @@ function App() {
     const uniqueNew = importedEntries.filter(e => !existingIds.has(e.id));
 
     setEntries([...uniqueNew, ...entries]);
-    alert(`Imported ${uniqueNew.length} new entries.`);
+    setToast({ isVisible: true, message: `Imported ${uniqueNew.length} new entries.`, type: 'success' });
     setView('library');
   };
 
@@ -154,6 +179,17 @@ function App() {
     setSelectedTag(null);
   };
 
+  // Update entry content (used for interactive checkboxes)
+  const handleUpdateContent = useCallback((entryId, newContent) => {
+    setEntries(prev => prev.map(e =>
+      e.id === entryId ? { ...e, content: newContent } : e
+    ));
+    // Also update selectedEntry if it's the one being modified
+    if (selectedEntry && selectedEntry.id === entryId) {
+      setSelectedEntry(prev => ({ ...prev, content: newContent }));
+    }
+  }, [selectedEntry]);
+
   const renderContent = () => {
     switch (view) {
       case 'library':
@@ -171,11 +207,11 @@ function App() {
           />
         );
       case 'detail':
-        return <EntryDetail entry={selectedEntry} onBack={() => setView('library')} onEdit={handleEditEntry} />;
+        return <EntryDetail entry={selectedEntry} onBack={() => setView('library')} onEdit={handleEditEntry} onUpdateContent={handleUpdateContent} />;
       case 'add':
-        return <EntryForm onSave={handleSaveEntry} onCancel={() => setView('library')} />;
+        return <EntryForm onSave={handleSaveEntry} onCancel={() => handleNavigate('library')} onDirtyChange={setIsFormDirty} />;
       case 'edit':
-        return <EntryForm initialData={selectedEntry} onSave={handleSaveEntry} onCancel={() => setView('detail')} />;
+        return <EntryForm initialData={selectedEntry} onSave={handleSaveEntry} onCancel={() => handleNavigate('detail')} onDirtyChange={setIsFormDirty} />;
       case 'settings':
         return <Settings entries={entries} onImport={handleImportData} />;
       default:
@@ -183,14 +219,52 @@ function App() {
     }
   };
 
+  // Handle navigation with proper state reset
+  const handleNavigate = (destination) => {
+    // If dirty, intercept navigation
+    if (isFormDirty) {
+      setDiscardDialog({
+        isOpen: true,
+        targetView: destination,
+        resetSelected: destination === 'add'
+      });
+      return;
+    }
+
+    if (destination === 'add') {
+      setSelectedEntry(null); // Reset for fresh form
+    }
+    setView(destination);
+    setIsMobileMenuOpen(false); // Close mobile menu after navigation
+  };
+
+  const confirmDiscard = () => {
+    setIsFormDirty(false); // Allow navigation
+    setDiscardDialog({ isOpen: false, targetView: null, resetSelected: false });
+
+    const { targetView, resetSelected } = discardDialog;
+    if (resetSelected) setSelectedEntry(null);
+    setView(targetView);
+    setIsMobileMenuOpen(false);
+  };
+
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
   return (
     <div className="layout">
+      {/* Mobile Menu Button */}
+      <button className="mobile-menu-btn" onClick={toggleMobileMenu} aria-label="Toggle menu">
+        <Menu size={24} />
+      </button>
+
       <Sidebar
         activeItem={view}
-        onNavigate={setView}
+        onNavigate={handleNavigate}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         searchInputRef={searchInputRef}
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
       />
       <main className="main-content">
         {renderContent()}
@@ -207,6 +281,24 @@ function App() {
         variant="danger"
       />
 
+      <ConfirmDialog
+        isOpen={discardDialog.isOpen}
+        title="Unsaved Changes"
+        message="You have unsaved changes. Are you sure you want to discard them and leave?"
+        confirmText="Discard Changes"
+        cancelText="Keep Editing"
+        onConfirm={confirmDiscard}
+        onCancel={() => setDiscardDialog({ isOpen: false, targetView: null })}
+        variant="warning"
+      />
+
+      <Toast
+        isVisible={toast.isVisible}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+      />
+
       <style>{`
         .layout {
           display: flex;
@@ -214,11 +306,41 @@ function App() {
           background-color: var(--color-bg-primary);
           background-image: radial-gradient(var(--color-bg-secondary) 1px, transparent 1px);
           background-size: 20px 20px;
+          position: relative;
         }
         .main-content {
           flex: 1;
           padding: var(--spacing-lg);
           overflow-y: auto;
+          width: 100%; /* Ensure content takes full width */
+        }
+
+        .mobile-menu-btn {
+          display: none;
+          position: absolute;
+          top: 16px;
+          left: 16px;
+          z-index: 50;
+          background: white;
+          border: 1px solid var(--color-bg-tertiary);
+          padding: 8px;
+          border-radius: var(--radius-sm);
+          cursor: pointer;
+          color: var(--color-text-primary);
+          box-shadow: var(--shadow-sm);
+        }
+
+        @media (max-width: 768px) {
+          .mobile-menu-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          
+          /* Add padding to main content to account for the menu button */
+          .main-content {
+            padding-top: 60px;
+          }
         }
       `}</style>
     </div>

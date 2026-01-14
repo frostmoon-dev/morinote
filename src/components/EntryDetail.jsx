@@ -1,53 +1,48 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { ArrowLeft, Printer, Calendar, Edit2 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 
-const EntryDetail = ({ entry, onBack, onEdit }) => {
+const EntryDetail = ({ entry, onBack, onEdit, onUpdateContent }) => {
   if (!entry) return null;
 
   const handlePrint = () => {
-    window.print(); // Simple PDF export via browser/electron print dialog
+    window.print();
   };
 
-  // Custom image component that handles local: references
-  const ImageRenderer = useCallback(({ src, alt }) => {
-    let imageSrc = src;
+  // Handle checkbox toggling in view mode
+  const handleCheckboxClick = useCallback((e) => {
+    if (!onUpdateContent || e.target.tagName !== 'INPUT' || e.target.type !== 'checkbox') return;
 
-    // Handle local: references - extract imageId and get from localStorage
-    if (src && src.startsWith('local:')) {
-      const imageId = src.replace('local:', '');
-      const storedImage = localStorage.getItem(imageId);
-      if (storedImage) {
-        imageSrc = storedImage;
-      } else {
-        // Image not found, show placeholder
-        return (
-          <div style={{
-            padding: '20px',
-            background: '#f5f5f5',
-            border: '1px dashed #ccc',
-            borderRadius: '8px',
-            textAlign: 'center',
-            color: '#888'
-          }}>
-            📷 Image not found: {alt || imageId}
-          </div>
-        );
+    // Get the list item and toggle its data-checked attribute
+    const listItem = e.target.closest('li');
+    if (!listItem) return;
+
+    const isChecked = e.target.checked;
+
+    // Parse and update the HTML content
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(entry.content, 'text/html');
+
+    // Find and update the corresponding checkbox
+    const checkboxes = doc.querySelectorAll('input[type="checkbox"]');
+    const viewCheckboxes = document.querySelectorAll('.markdown-body input[type="checkbox"]');
+
+    viewCheckboxes.forEach((cb, index) => {
+      if (cb === e.target && checkboxes[index]) {
+        checkboxes[index].checked = isChecked;
+        checkboxes[index].setAttribute('checked', isChecked ? 'checked' : '');
+        if (!isChecked) checkboxes[index].removeAttribute('checked');
+
+        // Update the parent li's data-checked attribute
+        const parentLi = checkboxes[index].closest('li');
+        if (parentLi) {
+          parentLi.setAttribute('data-checked', isChecked ? 'true' : 'false');
+        }
       }
-    }
+    });
 
-    return (
-      <img
-        src={imageSrc}
-        alt={alt || 'Image'}
-        style={{
-          maxWidth: '100%',
-          borderRadius: '8px',
-          margin: '1em 0'
-        }}
-      />
-    );
-  }, []);
+    const newContent = doc.body.innerHTML;
+    onUpdateContent(entry.id, newContent);
+  }, [entry, onUpdateContent]);
 
   return (
     <article className="entry-detail">
@@ -80,15 +75,12 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
           </div>
         </div>
 
-        <div className="markdown-body">
-          <ReactMarkdown
-            components={{
-              img: ImageRenderer
-            }}
-          >
-            {entry.content}
-          </ReactMarkdown>
-        </div>
+        {/* Render HTML content directly */}
+        <div
+          className="markdown-body"
+          onClick={handleCheckboxClick}
+          dangerouslySetInnerHTML={{ __html: entry.content }}
+        />
       </div>
 
       <style>{`
@@ -96,10 +88,10 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
           max-width: 800px;
           margin: 0 auto;
           background: white;
-          color: #1a1a1a; /* Even darker for primary text */
+          color: #1a1a1a;
           border-radius: var(--radius-lg);
           box-shadow: var(--shadow-sm);
-          min-height: 80vh; /* Paper-like feel */
+          min-height: 80vh;
           position: relative;
         }
 
@@ -107,7 +99,7 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
           display: flex;
           justify-content: space-between;
           padding: var(--spacing-md) var(--spacing-lg);
-          border-bottom: 1px solid #eee; /* Light gray border instead of variable */
+          border-bottom: 1px solid #eee;
         }
 
         .actions {
@@ -120,7 +112,7 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
           align-items: center;
           gap: 8px;
           font-weight: 500;
-          color: #4a4a4a; /* Darker grey */
+          color: #4a4a4a;
           transition: color 0.2s;
         }
 
@@ -135,7 +127,7 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
         .title {
           font-size: 2.5rem;
           margin-bottom: var(--spacing-md);
-          color: #000; /* Pure black for titles */
+          color: #000;
         }
 
         .meta {
@@ -143,7 +135,7 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
           align-items: center;
           gap: var(--spacing-lg);
           margin-bottom: var(--spacing-xl);
-          color: #555; /* Darker grey for meta */
+          color: #555;
           font-size: 0.9rem;
         }
 
@@ -159,16 +151,16 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
         }
 
         .tag {
-          background-color: #f0f0f0; /* Fixed light grey for white paper */
-          color: #4a4a4a; /* Fixed dark grey text */
+          background-color: #f0f0f0;
+          color: #4a4a4a;
           padding: 2px 10px;
-          border-radius: 12px; /* Soft pill shape */
+          border-radius: 12px;
           font-size: 0.85rem;
           font-weight: 500;
           border: 1px solid #e0e0e0;
         }
 
-        /* Markdown Styles */
+        /* HTML Content Styles */
         .markdown-body {
           font-size: 1.1rem;
           line-height: 1.8;
@@ -179,7 +171,12 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
           margin-top: 1.5em;
           margin-bottom: 0.5em;
           color: #000;
+          font-weight: 700;
         }
+
+        .markdown-body h1 { font-size: 1.8em; }
+        .markdown-body h2 { font-size: 1.5em; }
+        .markdown-body h3 { font-size: 1.2em; }
 
         .markdown-body p {
           margin-bottom: 1em;
@@ -196,6 +193,37 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
           padding-left: 0.5em;
         }
 
+        /* Task List Styles */
+        .markdown-body ul[data-type="taskList"] {
+          list-style: none;
+          padding-left: 0;
+        }
+
+        .markdown-body ul[data-type="taskList"] li {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          padding-left: 0;
+        }
+
+        .markdown-body ul[data-type="taskList"] li > label {
+          display: flex;
+          align-items: center;
+          margin-top: 2px;
+        }
+
+        .markdown-body ul[data-type="taskList"] input[type="checkbox"] {
+          width: 18px;
+          height: 18px;
+          cursor: pointer;
+          accent-color: var(--color-accent);
+        }
+
+        .markdown-body ul[data-type="taskList"] li[data-checked="true"] > div {
+          text-decoration: line-through;
+          color: #888;
+        }
+
         .markdown-body a {
           color: var(--color-accent); 
           text-decoration: underline;
@@ -208,26 +236,26 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
         }
         
         .markdown-body code {
-          background-color: var(--color-bg-primary); /* Soft mint/grey */
+          background-color: #f4f4f4;
           padding: 2px 6px;
           border-radius: 4px;
-          font-family: var(--font-mono);
+          font-family: 'Consolas', 'Monaco', monospace;
           font-size: 0.9em;
-          color: var(--color-accent); /* Use theme accent */
+          color: #e83e8c;
         }
 
         .markdown-body pre {
-          background-color: #f9f9f9;
+          background-color: #2d2d2d;
+          color: #f8f8f2;
           padding: 16px;
           border-radius: 8px;
           overflow-x: auto;
           margin: 1em 0;
-          border: 1px solid #eee;
         }
 
         .markdown-body pre code {
           background-color: transparent;
-          color: #333;
+          color: #f8f8f2;
           padding: 0;
         }
 
@@ -236,13 +264,27 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
           border-radius: 8px;
           margin: 1em 0;
         }
-        /* Print Styles - crucial for "Proof" */
+
+        .markdown-body blockquote {
+          border-left: 4px solid var(--color-accent);
+          margin: 1em 0;
+          padding-left: 1em;
+          color: #666;
+          font-style: italic;
+        }
+
+        .markdown-body hr {
+          border: none;
+          border-top: 2px solid #eee;
+          margin: 2em 0;
+        }
+
+        /* Print Styles */
         @media print {
           .detail-header, .sidebar {
-            display: none !important; /* Hide UI */
+            display: none !important;
           }
           
-          /* Reset layout containers so they don't hide content */
           body, #root, .layout, .main-content {
             visibility: visible !important;
             display: block !important;
@@ -255,7 +297,6 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
             position: static !important;
           }
 
-          /* Force the detail view to take over */
           .entry-detail {
             visibility: visible !important;
             position: absolute !important;
@@ -263,7 +304,7 @@ const EntryDetail = ({ entry, onBack, onEdit }) => {
             left: 0 !important;
             width: 100% !important;
             margin: 0 !important;
-            padding: 20px !important; /* Add some print padding */
+            padding: 20px !important;
             box-shadow: none !important;
             border: none !important;
             min-height: auto !important;

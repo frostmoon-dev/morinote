@@ -4,7 +4,7 @@ const path = require('path');
 const isDev = !app.isPackaged;
 
 // Configure auto-updater
-autoUpdater.autoDownload = false; // User controls when to download
+autoUpdater.autoDownload = true; // Automatically download updates
 autoUpdater.autoInstallOnAppQuit = true; // Install when app closes
 
 function createWindow() {
@@ -46,18 +46,7 @@ autoUpdater.on('checking-for-update', () => {
 
 autoUpdater.on('update-available', (info) => {
     console.log('Update available:', info.version);
-    dialog.showMessageBox({
-        type: 'info',
-        title: 'Update Available',
-        message: `A new version (${info.version}) is available!`,
-        buttons: ['Download Now', 'Later'],
-        defaultId: 0,
-        cancelId: 1
-    }).then((result) => {
-        if (result.response === 0) {
-            autoUpdater.downloadUpdate();
-        }
-    });
+    // Update will be automatically downloaded
 });
 
 autoUpdater.on('update-not-available', () => {
@@ -67,17 +56,17 @@ autoUpdater.on('update-not-available', () => {
 autoUpdater.on('download-progress', (progressObj) => {
     const percent = Math.round(progressObj.percent);
     console.log(`Download progress: ${percent}%`);
-    // You can send this to the renderer process if you want a progress bar
 });
 
 autoUpdater.on('update-downloaded', (info) => {
     console.log('Update downloaded');
+    // Notify user that update is ready - will auto-install on quit
     dialog.showMessageBox({
         type: 'info',
         title: 'Update Ready',
-        message: `Version ${info.version} has been downloaded. Restart the app to install the update.`,
+        message: `Version ${info.version} has been downloaded and will be installed when you close the app.`,
         buttons: ['Restart Now', 'Later'],
-        defaultId: 0,
+        defaultId: 1,
         cancelId: 1
     }).then((result) => {
         if (result.response === 0) {

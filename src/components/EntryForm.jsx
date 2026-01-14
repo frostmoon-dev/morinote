@@ -1,53 +1,103 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { Save, X, Image, Link, Upload } from 'lucide-react';
-import SimpleMDE from "react-simplemde-editor";
-import "easymde/dist/easymde.min.css";
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Save, X, Image, Link, Upload, Bold, Italic, Strikethrough, List, ListOrdered, CheckSquare, Code, Quote, Heading1, Heading2, Minus, Crop } from 'lucide-react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import ImageExtension from '@tiptap/extension-image';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
+import LinkExtension from '@tiptap/extension-link';
+import Placeholder from '@tiptap/extension-placeholder';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
-const EntryForm = ({ onSave, onCancel, initialData }) => {
+const EntryForm = ({ onSave, onCancel, initialData, onDirtyChange }) => {
   const [title, setTitle] = useState(initialData?.title || '');
-  const [content, setContent] = useState(initialData?.content || '');
   const [tags, setTags] = useState(initialData?.tags?.join(', ') || '');
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [imageAlt, setImageAlt] = useState('');
-  const editorRef = useRef(null);
 
-  // Custom image handler
-  const insertImage = useCallback((url, alt = 'image') => {
-    if (!url) return;
+  // Cropping state
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState(null);
+  const [crop, setCrop] = useState({ unit: '%', width: 50, height: 50, x: 25, y: 25 });
+  const [completedCrop, setCompletedCrop] = useState(null);
+  const imageRef = useRef(null);
+  const canvasRef = useRef(null);
 
-    // For base64 images, store in localStorage and use a reference
-    if (url.startsWith('data:')) {
-      const imageId = `img_${Date.now()}`;
-      try {
-        localStorage.setItem(imageId, url);
-        // Insert a cleaner placeholder that includes the imageId
-        const markdown = `![${alt}](local:${imageId})`;
-        setContent(prev => prev + '\n' + markdown + '\n');
-      } catch (e) {
-        // If localStorage is full, fall back to inline but truncated display
-        alert('Image storage is full. Please use a URL instead or clear some old entries.');
-        return;
+  // Initialize TipTap editor
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+      }),
+      ImageExtension.configure({
+        inline: true,
+        allowBase64: true,
+      }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
+      LinkExtension.configure({
+        openOnClick: false,
+      }),
+      Placeholder.configure({
+        placeholder: 'Write your learning journey here...',
+      }),
+    ],
+    content: initialData?.content || '',
+    onUpdate: ({ editor }) => {
+      if (onDirtyChange) {
+        const currentContent = editor.getHTML();
+        const initialContent = initialData?.content || '';
+        const isDirty = title !== (initialData?.title || '') ||
+          currentContent !== initialContent ||
+          tags !== (initialData?.tags?.join(', ') || '');
+        onDirtyChange(isDirty);
       }
-    } else {
-      // For URLs, insert normally
-      const markdown = `![${alt}](${url})`;
-      setContent(prev => prev + '\n' + markdown + '\n');
-    }
+    },
+  });
+
+  // Track dirty state for title and tags
+  useEffect(() => {
+    if (!onDirtyChange || !editor) return;
+
+    const initialTitle = initialData?.title || '';
+    const initialContent = initialData?.content || '';
+    const initialTags = initialData?.tags?.join(', ') || '';
+
+    const currentContent = editor.getHTML();
+    const isDirty = title !== initialTitle || currentContent !== initialContent || tags !== initialTags;
+    onDirtyChange(isDirty);
+
+    return () => onDirtyChange(false);
+  }, [title, tags, initialData, onDirtyChange, editor]);
+
+  // Insert image into editor
+  const insertImage = useCallback((url, alt = 'image') => {
+    if (!url || !editor) return;
+
+    editor.chain().focus().setImage({ src: url, alt }).run();
 
     setShowImageModal(false);
+    setShowCropModal(false);
     setImageUrl('');
     setImageAlt('');
-  }, []);
+    setImageToCrop(null);
+    setCrop({ unit: '%', width: 50, height: 50, x: 25, y: 25 });
+    setCompletedCrop(null);
+  }, [editor]);
 
-  // Handle local file upload
+  // Handle local file upload - now goes to crop modal first
   const handleFileUpload = useCallback((e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (limit to 2MB for localStorage)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image is too large. Please use an image under 2MB for local upload.');
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image is too large. Please use an image under 5MB.');
       return;
     }
 
@@ -55,45 +105,116 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
     reader.onload = (event) => {
       const base64 = event.target?.result;
       if (base64) {
-        insertImage(base64, imageAlt || file.name.split('.')[0]);
+        setImageToCrop(base64);
+        setShowImageModal(false);
+        setShowCropModal(true);
       }
     };
     reader.readAsDataURL(file);
-  }, [insertImage, imageAlt]);
-
-  // Custom toolbar with image handler
-  const editorOptions = useMemo(() => {
-    return {
-      autofocus: false,
-      spellChecker: false,
-      placeholder: "Write your learning journey here...",
-      status: false,
-      toolbar: [
-        "bold", "italic", "heading", "|",
-        "quote", "unordered-list", "ordered-list", "|",
-        "link",
-        {
-          name: "image",
-          action: () => setShowImageModal(true),
-          className: "fa fa-picture-o",
-          title: "Insert Image",
-        },
-        "code", "|",
-        "preview", "side-by-side", "fullscreen"
-      ],
-    };
+    e.target.value = ''; // Reset input
   }, []);
+
+  // Handle URL image - load and go to crop modal
+  const handleUrlImage = useCallback(() => {
+    if (!imageUrl) return;
+
+    // For URLs, we need to load the image and convert to base64 for cropping
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        setImageToCrop(dataUrl);
+        setShowImageModal(false);
+        setShowCropModal(true);
+      } catch (e) {
+        // CORS issue - insert directly without cropping
+        insertImage(imageUrl, imageAlt || 'image');
+      }
+    };
+    img.onerror = () => {
+      // If loading fails, try inserting directly
+      insertImage(imageUrl, imageAlt || 'image');
+    };
+    img.src = imageUrl;
+  }, [imageUrl, imageAlt, insertImage]);
+
+  // Skip crop and insert directly
+  const handleSkipCrop = useCallback(() => {
+    if (imageToCrop) {
+      insertImage(imageToCrop, imageAlt || 'image');
+    }
+  }, [imageToCrop, imageAlt, insertImage]);
+
+  // Generate cropped image and insert
+  const handleCropComplete = useCallback(() => {
+    if (!completedCrop || !imageRef.current || !canvasRef.current) {
+      // If no crop selected, use original
+      if (imageToCrop) {
+        insertImage(imageToCrop, imageAlt || 'image');
+      }
+      return;
+    }
+
+    const image = imageRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+
+    const pixelRatio = window.devicePixelRatio || 1;
+
+    canvas.width = completedCrop.width * scaleX * pixelRatio;
+    canvas.height = completedCrop.height * scaleY * pixelRatio;
+
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    ctx.imageSmoothingQuality = 'high';
+
+    ctx.drawImage(
+      image,
+      completedCrop.x * scaleX,
+      completedCrop.y * scaleY,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY,
+      0,
+      0,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY
+    );
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          insertImage(reader.result, imageAlt || 'cropped-image');
+        };
+        reader.readAsDataURL(blob);
+      }
+    }, 'image/png', 1);
+  }, [completedCrop, imageToCrop, imageAlt, insertImage]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!editor) return;
+
     onSave({
-      id: initialData?.id, // Preserve ID if editing
+      id: initialData?.id,
       title,
-      content,
-      tags: tags.split(/[,\s]+/).map(t => t.trim()).filter(Boolean),
+      content: editor.getHTML(),
+      tags: tags.split(/[,\s]+/).map(t => t.trim().toLowerCase()).filter(Boolean),
       createdAt: initialData?.createdAt || new Date().toISOString()
     });
   };
+
+  if (!editor) {
+    return <div>Loading editor...</div>;
+  }
 
   return (
     <form className="entry-form" onSubmit={handleSubmit}>
@@ -103,7 +224,7 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
           <button type="button" className="btn btn-secondary" onClick={onCancel}>
             <X size={18} /> Cancel
           </button>
-          <button type="submit" className="btn btn-primary" disabled={!title || !content}>
+          <button type="submit" className="btn btn-primary" disabled={!title || !editor.getText().trim()}>
             <Save size={18} /> Save Note
           </button>
         </div>
@@ -135,11 +256,119 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
 
       <div className="form-group full-height editor-wrapper">
         <label>Content</label>
-        <SimpleMDE
-          value={content}
-          onChange={setContent}
-          options={editorOptions}
-        />
+
+        {/* Custom Toolbar */}
+        <div className="editor-toolbar">
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={editor.isActive('bold') ? 'active' : ''}
+            title="Bold"
+          >
+            <Bold size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={editor.isActive('italic') ? 'active' : ''}
+            title="Italic"
+          >
+            <Italic size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            className={editor.isActive('strike') ? 'active' : ''}
+            title="Strikethrough"
+          >
+            <Strikethrough size={18} />
+          </button>
+
+          <span className="toolbar-divider" />
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={editor.isActive('heading', { level: 1 }) ? 'active' : ''}
+            title="Heading 1"
+          >
+            <Heading1 size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={editor.isActive('heading', { level: 2 }) ? 'active' : ''}
+            title="Heading 2"
+          >
+            <Heading2 size={18} />
+          </button>
+
+          <span className="toolbar-divider" />
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={editor.isActive('bulletList') ? 'active' : ''}
+            title="Bullet List"
+          >
+            <List size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={editor.isActive('orderedList') ? 'active' : ''}
+            title="Numbered List"
+          >
+            <ListOrdered size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
+            className={editor.isActive('taskList') ? 'active' : ''}
+            title="Task List"
+          >
+            <CheckSquare size={18} />
+          </button>
+
+          <span className="toolbar-divider" />
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            className={editor.isActive('blockquote') ? 'active' : ''}
+            title="Quote"
+          >
+            <Quote size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            className={editor.isActive('codeBlock') ? 'active' : ''}
+            title="Code Block"
+          >
+            <Code size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().setHorizontalRule().run()}
+            title="Horizontal Rule"
+          >
+            <Minus size={18} />
+          </button>
+
+          <span className="toolbar-divider" />
+
+          <button
+            type="button"
+            onClick={() => setShowImageModal(true)}
+            title="Insert Image"
+          >
+            <Image size={18} />
+          </button>
+        </div>
+
+        {/* TipTap Editor */}
+        <EditorContent editor={editor} className="tiptap-editor" />
       </div>
 
       {/* Image Insert Modal */}
@@ -191,9 +420,9 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
                   id="image-upload"
                 />
                 <label htmlFor="image-upload" className="upload-btn">
-                  Choose File
+                  Choose File (will open cropper)
                 </label>
-                <span className="help-text">Max 5MB. Will be embedded as base64.</span>
+                <span className="help-text">Max 5MB. You can crop after selecting.</span>
               </div>
             </div>
 
@@ -208,10 +437,78 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => insertImage(imageUrl, imageAlt || 'image')}
+                onClick={handleUrlImage}
                 disabled={!imageUrl}
               >
-                Insert from URL
+                <Crop size={16} /> Load & Crop
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Crop Modal */}
+      {showCropModal && imageToCrop && (
+        <div className="image-modal-overlay" onClick={() => setShowCropModal(false)}>
+          <div className="crop-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><Crop size={20} /> Crop Image</h3>
+              <button
+                type="button"
+                className="close-btn"
+                onClick={() => {
+                  setShowCropModal(false);
+                  setImageToCrop(null);
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="crop-container">
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={(c) => setCompletedCrop(c)}
+              >
+                <img
+                  ref={imageRef}
+                  src={imageToCrop}
+                  alt="Crop preview"
+                  style={{ maxWidth: '100%', maxHeight: '60vh' }}
+                />
+              </ReactCrop>
+              <canvas ref={canvasRef} style={{ display: 'none' }} />
+            </div>
+
+            <div className="crop-help">
+              <p>Drag to select the area you want to crop. Leave empty to use full image.</p>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowCropModal(false);
+                  setImageToCrop(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleSkipCrop}
+              >
+                Skip Crop
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleCropComplete}
+              >
+                <Crop size={16} /> Apply Crop
               </button>
             </div>
           </div>
@@ -219,12 +516,8 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
       )}
 
       <style>{`
-        /* Removed inline styles for EntryForm here as they are now in the component, 
-           ensuring we don't have duplicates or conflicts. 
-           We will trust the styled-jsx block in EntryForm.jsx */
-        
         .entry-form {
-          max-width: 900px; /* Slightly wider for editor */
+          max-width: 900px;
           margin: 0 auto;
           display: flex;
           flex-direction: column;
@@ -243,7 +536,6 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
           gap: var(--spacing-sm);
         }
 
-        /* Button Styles */
         .btn {
           display: flex;
           align-items: center;
@@ -276,7 +568,6 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
           color: var(--color-text-primary);
         }
 
-        /* Inputs */
         .form-group {
           display: flex;
           flex-direction: column;
@@ -285,6 +576,7 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
         
         .form-group.full-height {
           flex: 1;
+          min-height: 0;
         }
 
         label {
@@ -300,7 +592,7 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
           font-family: var(--font-sans);
           font-size: 1rem;
           background-color: white;
-          color: #333; /* Force dark text on white input */
+          color: #333;
           transition: border-color 0.2s;
         }
 
@@ -310,196 +602,204 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
           box-shadow: 0 0 0 3px rgba(229, 152, 155, 0.1);
         }
         
-        /* Help Text */
         .help-text {
           font-size: 0.8rem;
           color: var(--color-text-tertiary);
           margin-top: 4px;
         }
 
-        /* SimpleMDE Overrides */
-        .editor-wrapper .EasyMDEContainer .editor-toolbar {
-          border-color: var(--color-bg-tertiary);
-          background-color: #f5f5f5;
+        /* Editor Toolbar */
+        .editor-toolbar {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+          padding: 8px 12px;
+          background: #f5f5f5;
+          border: 1px solid var(--color-bg-tertiary);
+          border-bottom: none;
           border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-          opacity: 1;
         }
-        
-        .editor-wrapper .EasyMDEContainer .CodeMirror {
-          border-color: var(--color-bg-tertiary);
+
+        .editor-toolbar button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border: none;
+          background: transparent;
+          border-radius: 4px;
+          cursor: pointer;
+          color: #555;
+          transition: all 0.15s;
+        }
+
+        .editor-toolbar button:hover {
+          background: #e0e0e0;
+          color: #000;
+        }
+
+        .editor-toolbar button.active {
+          background: var(--color-accent);
+          color: white;
+        }
+
+        .toolbar-divider {
+          width: 1px;
+          height: 24px;
+          background: #ddd;
+          margin: 4px 6px;
+        }
+
+        /* TipTap Editor Styles */
+        .tiptap-editor {
+          flex: 1;
+          min-height: 300px;
+          border: 1px solid var(--color-bg-tertiary);
           border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-          font-family: var(--font-sans); /* CHANGED: Use Quicksand for a richer feel */
-          font-size: 1.05rem; /* CHANGED: Slightly larger for readability */
-          line-height: 1.7; /* CHANGED: More breathing room */
-          color: #1a1a1a !important; /* FORCE DARK TEXT */
-          background-color: white !important; /* ENSURE WHITE BG */
-          min-height: 400px;
-          padding: 20px !important; /* CHANGED: More padding text */
+          background: white;
+          overflow-y: auto;
         }
 
-        /* Fix cursor color */
-        .editor-wrapper .CodeMirror-cursor {
-          border-left: 2px solid #333 !important;
+        .tiptap-editor .tiptap {
+          padding: 20px;
+          min-height: 300px;
+          outline: none;
+          font-family: var(--font-sans);
+          font-size: 1.05rem;
+          line-height: 1.7;
+          color: #1a1a1a;
         }
 
-        /* Toolbar Button Styling */
-        .editor-wrapper .editor-toolbar button {
-          color: #333 !important; /* Dark icons */
+        .tiptap-editor .tiptap p {
+          margin: 0 0 1em 0;
         }
 
-        .editor-wrapper .editor-toolbar button:hover,
-        .editor-wrapper .editor-toolbar button.active {
-          background-color: #e0e0e0 !important; /* Light grey hover */
-          border-color: #d0d0d0 !important;
-          color: #000 !important;
+        .tiptap-editor .tiptap h1,
+        .tiptap-editor .tiptap h2,
+        .tiptap-editor .tiptap h3 {
+          margin: 1.5em 0 0.5em 0;
+          font-weight: 700;
+          color: #111;
         }
 
-        /* Hybrid Markdown Styling - HIGH VISIBILITY */
-        .editor-wrapper .CodeMirror .cm-formatting {
-           color: #333 !important; /* CHANGED: Much darker, almost black */
-           font-size: 1em; 
-           font-weight: 500 !important;
-           opacity: 1 !important;
+        .tiptap-editor .tiptap h1 { font-size: 1.8em; }
+        .tiptap-editor .tiptap h2 { font-size: 1.5em; }
+        .tiptap-editor .tiptap h3 { font-size: 1.2em; }
+
+        .tiptap-editor .tiptap ul,
+        .tiptap-editor .tiptap ol {
+          padding-left: 1.5em;
+          margin: 0.5em 0;
         }
 
-        /* Header formatting chars (###) */
-        .editor-wrapper .CodeMirror .cm-formatting-header {
-           color: var(--color-accent) !important;
-           opacity: 1 !important; /* CHANGED: No transparency */
-           font-weight: bold !important;
+        .tiptap-editor .tiptap li {
+          margin: 0.25em 0;
         }
 
-        /* START: Bullet Point Styling (Turn * into •) */
-        .editor-wrapper .CodeMirror .cm-formatting-list-ul {
-           position: relative;
-           color: transparent !important; /* Hide the actual asterisk */
-           min-width: 15px; /* Ensure space for bullet */
-           display: inline-block;
+        /* Task List Styles */
+        .tiptap-editor .tiptap ul[data-type="taskList"] {
+          list-style: none;
+          padding-left: 0;
         }
 
-        .editor-wrapper .CodeMirror .cm-formatting-list-ul::after {
-           content: '•';
-           position: absolute;
-           left: 0;
-           top: -5px; /* Fine-tune vertical alignment */
-           color: #000; /* Bold Black Bullet */
-           font-size: 2em; /* Large bullet */
-           font-weight: bold;
-           visibility: visible;
-           line-height: 1;
-        }
-        /* END: Bullet Point Styling */
-
-        /* Ordered List Numbers (1., 2.) - Keep text, make bold black */
-        .editor-wrapper .CodeMirror .cm-formatting-list-ol {
-           color: #000 !important;
-           font-weight: 800 !important;
+        .tiptap-editor .tiptap ul[data-type="taskList"] li {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
         }
 
-        /* WYSIWYG: Hide asterisks for bold (**text**) */
-        .editor-wrapper .CodeMirror .cm-formatting-strong {
-           font-size: 0 !important;
-           color: transparent !important;
-           width: 0 !important;
-           margin: 0 !important;
-           padding: 0 !important;
+        .tiptap-editor .tiptap ul[data-type="taskList"] li > label {
+          display: flex;
+          align-items: center;
+          margin-top: 2px;
         }
 
-        /* WYSIWYG: Hide asterisks for italic (*text*) */
-        .editor-wrapper .CodeMirror .cm-formatting-em {
-           font-size: 0 !important;
-           color: transparent !important;
-           width: 0 !important;
-           margin: 0 !important;
-           padding: 0 !important;
+        .tiptap-editor .tiptap ul[data-type="taskList"] li > label input[type="checkbox"] {
+          width: 18px;
+          height: 18px;
+          cursor: pointer;
+          accent-color: var(--color-accent);
         }
 
-        .editor-wrapper .cm-header {
-          color: #111 !important;
-          font-weight: 700 !important;
-          font-size: 1.5em; 
+        .tiptap-editor .tiptap ul[data-type="taskList"] li > div {
+          flex: 1;
         }
 
-        .editor-wrapper .cm-strong {
-          color: #000 !important;
-          font-weight: 800 !important;
+        .tiptap-editor .tiptap ul[data-type="taskList"] li[data-checked="true"] > div {
+          text-decoration: line-through;
+          color: #888;
         }
 
-        .editor-wrapper .cm-em {
-          color: #222 !important;
-          font-style: italic !important;
+        /* Blockquote */
+        .tiptap-editor .tiptap blockquote {
+          border-left: 4px solid var(--color-accent);
+          margin: 1em 0;
+          padding-left: 1em;
+          color: #666;
+          font-style: italic;
         }
 
-        .editor-wrapper .cm-link {
-          color: #d06d75 !important;
-          text-decoration: underline !important;
+        /* Code Block */
+        .tiptap-editor .tiptap pre {
+          background: #2d2d2d;
+          color: #f8f8f2;
+          padding: 16px;
+          border-radius: 8px;
+          overflow-x: auto;
+          margin: 1em 0;
+          font-family: 'Consolas', 'Monaco', monospace;
+          font-size: 0.9em;
         }
 
-        /* WYSIWYG: Hide long URLs (especially base64 images) */
-        .editor-wrapper .cm-url {
-          font-size: 0 !important;
-          color: transparent !important;
-        }
-
-        /* WYSIWYG: Hide image markdown formatting */
-        .editor-wrapper .cm-formatting-image {
-          font-size: 0 !important;
-          color: transparent !important;
-        }
-
-        /* Show image indicator instead of raw markdown */
-        .editor-wrapper .cm-image {
-          color: var(--color-accent) !important;
-          font-weight: 500 !important;
-        }
-
-        /* Style for image alt text - make it visible as a placeholder */
-        .editor-wrapper .cm-image-alt-text {
-          color: #666 !important;
-          font-style: italic !important;
-          background: rgba(229, 152, 155, 0.1);
+        .tiptap-editor .tiptap code {
+          background: #f4f4f4;
           padding: 2px 6px;
           border-radius: 4px;
+          font-family: 'Consolas', 'Monaco', monospace;
+          font-size: 0.9em;
+          color: #e83e8c;
         }
 
-        /* Hide the entire image line and show indicator */
-        .editor-wrapper .CodeMirror-line:has(.cm-image) {
-          position: relative;
-        }
-        
-        .editor-wrapper .cm-quote {
-          color: #666 !important;
-          font-style: italic !important;
-          border-left: 4px solid #ddd;
-          padding-left: 10px;
+        .tiptap-editor .tiptap pre code {
+          background: none;
+          color: inherit;
+          padding: 0;
         }
 
-        /* Preview Mode Styling - Match Detail View */
-        .editor-wrapper .editor-preview {
-          background-color: white !important;
-          color: #1a1a1a !important;
-          font-family: var(--font-sans) !important;
-          line-height: 1.8 !important;
-          padding: 20px !important;
+        /* Horizontal Rule */
+        .tiptap-editor .tiptap hr {
+          border: none;
+          border-top: 2px solid #eee;
+          margin: 2em 0;
         }
 
-        .editor-wrapper .editor-preview h1, 
-        .editor-wrapper .editor-preview h2 {
-          color: #000 !important;
-          border-bottom: 1px solid #eee;
-          padding-bottom: 0.3em;
-        }
-        
-        .editor-wrapper .editor-preview a {
-          color: #d06d75 !important;
-        }
-        
-        /* Fix placeholder color */
-        .CodeMirror-placeholder {
-          color: #9ca3af !important; /* Clearly visible placeholder */
+        /* Images */
+        .tiptap-editor .tiptap img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+          margin: 1em 0;
+          display: block;
         }
 
-        /* Image Modal Styles */
+        /* Link Styles */
+        .tiptap-editor .tiptap a {
+          color: var(--color-accent);
+          text-decoration: underline;
+          cursor: pointer;
+        }
+
+        /* Placeholder */
+        .tiptap-editor .tiptap p.is-editor-empty:first-child::before {
+          content: attr(data-placeholder);
+          color: #9ca3af;
+          float: left;
+          height: 0;
+          pointer-events: none;
+        }
+
+        /* Modal Styles */
         .image-modal-overlay {
           position: fixed;
           top: 0;
@@ -521,6 +821,18 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
           max-width: 480px;
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
           overflow: hidden;
+        }
+
+        .crop-modal {
+          background: white;
+          border-radius: var(--radius-lg);
+          width: 90%;
+          max-width: 700px;
+          max-height: 90vh;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
         }
 
         .modal-header {
@@ -558,6 +870,28 @@ const EntryForm = ({ onSave, onCancel, initialData }) => {
 
         .modal-body {
           padding: var(--spacing-lg);
+        }
+
+        .crop-container {
+          padding: var(--spacing-lg);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background: #f0f0f0;
+          overflow: auto;
+          max-height: 60vh;
+        }
+
+        .crop-help {
+          padding: var(--spacing-sm) var(--spacing-lg);
+          background: #fff9e6;
+          border-top: 1px solid #ffe082;
+        }
+
+        .crop-help p {
+          margin: 0;
+          font-size: 0.85rem;
+          color: #856404;
         }
 
         .image-option {
